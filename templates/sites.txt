@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sites</title>
+<link rel="icon" type="image/png" href="static/logos/servitech.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; display: flex; }
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background-color: #2c3e50;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    position: fixed;
+}
+.sidebar a {
+    display: block;
+    color: #ecf0f1;
+    padding: 12px 20px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.sidebar a:hover { background-color: #34495e; }
+.sidebar a.active { background-color: #2980b9; }
+
+/* Main content */
+.main-content {
+    margin-left: 220px;
+    padding: 20px;
+    flex: 1;
+}
+
+/* Top bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    padding: 12px 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.top-left { display: flex; align-items: center; gap: 10px; }
+select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; margin-right: 10px; }
+select:hover { border-color: #2980b9; }
+
+/* Card */
+.card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    display: inline-block;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+.card span {
+    font-size: 28px;
+    font-weight: 700;
+    margin-left: 10px;
+    color: #27ae60;
+    background: linear-gradient(135deg, #a1ffce, #faffd1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+/* Instrument grid */
+.instrument-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+}
+
+/* Instrument cards */
+.instrument-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.instrument-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+    background: #f9fbff;
+}
+.instrument-card .instr-name { font-weight: 600; color: #2c3e50; font-size: 18px; }
+.instrument-card .instr-count { font-weight: 700; font-size: 24px; color: #27ae60; }
+
+/* Slide-down details */
+.card-details {
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+    max-height: 0;
+    overflow: hidden;
+    padding-left: 0;
+    padding-right: 0;
+}
+.card-details table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.card-details th, .card-details td {
+    padding: 6px 8px;
+    text-align: left;
+    font-size: 14px;
+}
+.card-details th {
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Responsive */
+@media (max-width: 540px) {
+    .top-left { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <a href="{{ url_for('index') }}" class="{% if request.path == '/' %}active{% endif %}" id="menu-jobs">Jobs</a>
+    <a href="{{ url_for('instruments') }}" class="{% if request.path.startswith('/instruments') %}active{% endif %}" id="menu-instruments">Instruments</a>
+    <a href="{{ url_for('sites') }}" class="{% if request.path.startswith('/sites') %}active{% endif %}" id="menu-sites">Sites</a>
+</div>
+
+<div class="main-content">
+    <div class="top-bar">
+        <div class="top-left">
+            <label for="region-select">Region:</label>
+            <select id="region-select"><option value="">All Regions</option></select>
+            <label for="site-select">Site:</label>
+            <select id="site-select"><option value="">All Sites</option></select>
+        </div>
+        <div class="logo">
+            <img src="static/logos/servitech.png" alt="Logo" style="height:30px;">
+        </div>
+    </div>
+
+    <div class="card">
+        Total Instruments: <span id="instrument-count">0</span>
+    </div>
+
+    <div id="instrument-grid" class="instrument-grid">
+        <!-- Sample static cards -->
+        <div class="instrument-card">
+            <div>
+                <div class="instr-name">Instrument A</div>
+                <div class="instr-count">12</div>
+            </div>
+            <div class="card-details">
+                <div class="details-inner">
+                    <table>
+                        <tr><th>Sites</th><th>Count</th></tr>
+                        <tr><td>Site 1</td><td>5</td></tr>
+                        <tr><td>Site 2</td><td>7</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="instrument-card">
+            <div>
+                <div class="instr-name">Instrument B</div>
+                <div class="instr-count">8</div>
+            </div>
+            <div class="card-details">
+                <div class="details-inner">
+                    <table>
+                        <tr><th>Sites</th><th>Count</th></tr>
+                        <tr><td>Site 3</td><td>8</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

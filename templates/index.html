@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Dashboard</title>
+<link rel="icon" type="image/png" href="static/logos/servitech.png">
+<style>
+/* General reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Body styling */
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; display: flex; }
+
+/* Sidebar styles */
+.sidebar {
+    width: 220px;
+    background-color: #2c3e50;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    position: fixed;
+}
+.sidebar a {
+    display: block;
+    color: #ecf0f1;
+    padding: 12px 20px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.sidebar a:hover {
+    background-color: #34495e;
+}
+.sidebar a.active {
+    background-color: #2980b9;
+}
+
+/* Main content wrapper */
+.main-content {
+    margin-left: 220px; /* leave space for sidebar */
+    padding: 20px;
+    flex: 1;
+}
+
+/* Top bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: row;
+    padding: 12px 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    width: 100%;
+}
+
+/* Top left controls */
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#site-info {
+    margin-top: 8px;
+    margin-left: 60px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Inputs and buttons */
+select, button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    transition: all 0.2s;
+}
+
+select:hover { border-color: #2980b9; }
+button { cursor: pointer; color: #fff; border: none; transition: opacity 0.2s, transform 0.1s; }
+button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* Standard buttons */
+.add-btn { background-color: #3498db; }
+.edit-btn { background-color: #f1c40f; color: #000; }
+.delete-btn { background-color: #e74c3c; }
+.import-btn { background-color: #27ae60; color: #fff; }
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    table-layout: auto;
+}
+
+th, td { padding: 12px 15px; text-align: left; }
+th { background-color: #2980b9; color: #fff; font-weight: 600; }
+tr:nth-child(even) { background-color: #ecf0f1; }
+tr:hover { background-color: #d6eaf8; }
+.placeholder { text-align: center; color: #7f8c8d; }
+
+/* Filter row */
+#filter-row select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #ccc; }
+
+/* Table buttons */
+td button { margin-right: 5px; margin-top: 2px; font-size: 13px; }
+
+/* Icon buttons for delete/complete */
+.icon-btn {
+    background: none !important;
+    border: none !important;
+    padding: 2px 4px !important;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Ensure Actions column buttons stay on same line */
+td.actions-cell {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-start;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Modals */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    position: relative;
+    max-height: 90%;
+    overflow-y: auto;
+}
+
+.modal-content h2 { margin-bottom: 15px; font-size: 20px; color: #2c3e50; }
+.modal-content label { display: block; margin-top: 10px; font-weight: 500; color: #34495e; }
+.modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; transition: border-color 0.2s; }
+.modal-content input:focus, .modal-content textarea:focus { border-color: #2980b9; outline: none; }
+.modal-content button { margin-top: 15px; }
+.close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold; font-size: 18px; color: #333; }
+
+/* Sortable headers */
+th.sortable {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+th.sortable::after {
+    content: "⬍"; /* default unsorted icon */
+    font-size: 12px;
+    margin-left: 6px;
+    color: #fff;
+}
+
+th.sortable.sorted-asc::after { content: "⬆"; }
+th.sortable.sorted-desc::after { content: "⬇"; }
+
+/* Editable cells */
+td.editable { cursor: pointer; position: relative; }
+td.editable:hover { background-color: #e8f0fe; }
+td.editable input,
+td.editable textarea {
+    width: 100%;
+    height: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    outline: none;
+    box-sizing: border-box;
+    resize: none;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    background-color: #2c3e50;
+    color: #fff;
+    min-height: 100vh;
+    padding-top: 20px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* optional spacing between links */
+}
+
+.sidebar-bottom {
+    margin-top: auto; /* sticks to bottom */
+    padding: 15px;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <!-- Navigation links -->
+    <div class="sidebar-nav">
+        <a href="{{ url_for('index') }}" class="{% if request.path == '/' %}active{% endif %}" id="menu-jobs">Jobs</a>
+        <a href="{{ url_for('instruments') }}" class="{% if request.path.startswith('/instruments') %}active{% endif %}" id="menu-instruments">Instruments</a>
+        <a href="{{ url_for('sites') }}" class="{% if request.path.startswith('/sites') %}active{% endif %}" id="menu-sites">Sites</a>
+    </div>
+
+    <!-- Username at bottom -->
+    <div class="sidebar-bottom">
+        <div style="font-size:14px; color:#bdc3c7;">Logged in as:</div>
+        <div style="font-size:42px; font-weight:bold; text-transform:uppercase; color:#ecf0f1;">
+            {{ session['username'] }}
+        </div>
+    </div>
+</div>
+<div class="main-content">
+
+<div class="top-bar">
+    <div style="display:flex; flex-direction:column;">
+        <div class="top-left">
+            <img id="uu-logo" src="static/logos/uu.png" alt="UU Logo" 
+                 style="display:none; width:50px; height:30px; object-fit:contain; margin-left:10px;">
+            <label for="site">Site:</label>
+            <select id="site"><option>Loading sites...</option></select>
+            <button id="add-job-btn" class="add-btn" style="display:none;" onclick="openModal('add')">Add a Job</button>
+            <button id="import-btn" class="import-btn" onclick="document.getElementById('importFileInput').click();">Import</button>
+            <input type="file" id="importFileInput" style="display:none;" onchange="handleFileImport(event)">
+        </div>
+
+        <div id="site-info">
+            <div id="info-plant"></div>
+            <div id="info-workcenter"></div>
+            <div id="info-location"></div>
+        </div>
+    </div>
+    <div class="logo">
+        <img id="sidebar-logo" src="static/logos/servitech.png" alt="Site Dashboard Logo">
+    </div>
+</div>
+
+<table id="job-table">
+  <thead>
+    <tr>
+       <th class="sortable" data-filter="true">Functional Location Key</th>
+       <th class="sortable" data-filter="true">Location Description</th>
+       <th class="sortable" data-filter="true">Maintenance Plant Description</th>
+       <th class="sortable">Maintenance Work Center Description</th>
+       <th class="sortable" data-filter="true">E Agi</th>
+       <th class="sortable" data-filter="true">E Agi Description</th>
+       <th class="sortable" data-filter="true">Task Description</th>
+       <th class="sortable">Cycle in Days RCM</th>
+       <th class="sortable" data-filter="true">Frequency</th>
+       <th class="sortable">Next Call Date</th>
+       <th class="sortable">Due Date</th>
+       <th class="sortable">Days Overdue</th>
+       <th class="sortable" data-filter="true">Reason</th>
+       <th class="sortable">Facility Key - Desc</th>
+       <th>Actions</th>
+    </tr>
+    <tr id="filter-row">
+        <!-- Filter dropdowns will be generated dynamically by script -->
+    </tr>
+</thead>
+    <tbody>
+        <tr class="placeholder">
+            <td colspan="15">Select a site to see jobs...</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- MODALS -->
+<!-- Add, Delete, Complete modals remain unchanged -->
+<div id="add-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('add')">&times;</span>
+        <h2>Add Job</h2>
+        <label>Functional Location Key:</label><input type="text" id="add-flk">
+        <label>Location Description:</label><input type="text" id="add-locationdesc">
+        <label>Maintenance Plant Description:</label><input type="text" id="add-plantdesc">
+        <label>Maintenance Work Center Description:</label><input type="text" id="add-workcenterdesc">
+        <label>E Agi:</label><input type="text" id="add-eagi">
+        <label>E Agi Description:</label><input type="text" id="add-eagidesc">
+        <label>Task Description:</label><textarea id="add-task" rows="2"></textarea>
+        <label>Cycle in Days RCM:</label><input type="number" id="add-cycle">
+        <label>Frequency:</label><input type="text" id="add-frequency">
+        <label>Next Call Date:</label><input type="date" id="add-nextcall">
+        <label>Due Date:</label><input type="date" id="add-due">
+        <label>Days Overdue:</label><input type="number" id="add-overdue">
+        <label>Reason:</label><input type="text" id="add-reason">
+        <label>Facility Key - Desc:</label><input type="text" id="add-facility">
+        <button class="add-btn" onclick="submitAddJob()">Add Job</button>
+    </div>
+</div>
+
+<div id="delete-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('delete')">&times;</span>
+        <h2>Delete Job</h2>
+        <p>Are you sure you want to delete this job?</p>
+        <button class="delete-btn" onclick="closeModal('delete')">Yes, Delete</button>
+        <button onclick="closeModal('delete')">Cancel</button>
+    </div>
+</div>
+
+<div id="complete-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('complete')">&times;</span>
+        <h2>Complete Job</h2>
+        <p>Are you sure you want to mark this job as complete?</p>
+        <button class="add-btn" style="background-color:#8e44ad;" onclick="submitCompleteJob()">Yes, Complete</button>
+        <button onclick="closeModal('complete')">Cancel</button>
+    </div>
+</div>
+
+<script>
+// Load sites
+async function loadSites() {
+    try {
+        const response = await fetch('/api/sites');
+        const sites = await response.json();
+        const select = document.getElementById('site');
+        select.innerHTML = '<option value="">Select a site...</option>';
+        sites.forEach(site => {
+            const opt = document.createElement('option');
+            opt.textContent = site.name;
+            opt.value = site.id;
+            opt.dataset.location = site.location;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error('Failed to load sites:', err);
+        document.getElementById('site').innerHTML = '<option>Error loading sites</option>';
+    }
+}
+
+// Load jobs for a site
+async function loadJobsForSite(siteId) {
+    const tbody = document.querySelector('#job-table tbody');
+    const addBtn = document.getElementById('add-job-btn');
+    const importBtn = document.getElementById('import-btn');
+    const uuLogo = document.getElementById('uu-logo');
+
+    document.getElementById('info-plant').textContent = "";
+    document.getElementById('info-workcenter').textContent = "";
+    document.getElementById('info-location').textContent = "";
+
+    tbody.innerHTML = '';
+    addBtn.style.display = siteId ? 'inline-block' : 'none';
+    importBtn.style.display = siteId ? 'inline-block' : 'none';
+    uuLogo.style.display = siteId ? 'inline-block' : 'none';
+
+    if (!siteId) {
+        tbody.innerHTML = '<tr class="placeholder"><td colspan="15">Select a site to see jobs...</td></tr>';
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/jobs/${siteId}`);
+        const jobs = await res.json();
+
+        if (Array.isArray(jobs) && jobs.length > 0) {
+            const selected = document.getElementById('site').selectedOptions[0];
+            document.getElementById('info-location').textContent = "Location: " + selected.dataset.location;
+        }
+
+        if (!Array.isArray(jobs) || jobs.length === 0) {
+            tbody.innerHTML = '<tr class="placeholder"><td colspan="15">No jobs found for this site.</td></tr>';
+            return;
+        }
+
+        jobs.forEach(job => {
+            const tr = document.createElement('tr');
+            tr.dataset.jobId = job.id;
+            tr.innerHTML = `
+                <td class="editable">${job.FLK || ''}</td>
+                <td class="editable">${job.LocationDesc || ''}</td>
+                <td class="editable">${job.PlantDesc || ''}</td>
+                <td class="editable">${job.WorkCenterDesc || ''}</td>
+                <td class="editable">${job.EAgI || ''}</td>
+                <td class="editable">${job.EAgIDesc || ''}</td>
+                <td class="editable">${job.TaskDesc || ''}</td>
+                <td class="editable">${job.CycleDaysRCM || ''}</td>
+                <td class="editable">${job.Frequency || ''}</td>
+                <td class="editable">${job.NextCallDate || ''}</td>
+                <td class="editable">${job.DueDate || ''}</td>
+                <td class="editable">${job.DaysOverdue || ''}</td>
+                <td class="editable">${job.Reason || ''}</td>
+                <td class="editable">${job.FacilityKeyDesc || ''}</td>
+                <td class="actions-cell">
+                    <button class="icon-btn" onclick="openModal('delete')">❌</button>
+                    <button class="icon-btn" onclick="openModal('complete')">✅</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        populateColumnFilters(); // Populate filters after jobs load
+
+    } catch (err) {
+        console.error('Error loading jobs:', err);
+        tbody.innerHTML = '<tr class="placeholder"><td colspan="15">Error loading jobs.</td></tr>';
+    }
+}
+
+
+
+function populateColumnFilters() {
+    const table = document.getElementById('job-table');
+    const filterRow = document.getElementById('filter-row');
+    if (!filterRow) return;
+
+    const tbodyRows = Array.from(table.tBodies[0].rows);
+    const headers = table.tHead.rows[0].cells;
+
+    filterRow.innerHTML = ''; // Clear previous filters
+
+    Array.from(headers).forEach((th, colIndex) => {
+        const filterTh = document.createElement('th');
+        if (th.dataset.filter === "true") {
+            const select = document.createElement('select');
+            select.classList.add('col-filter');
+            select.dataset.colIndex = colIndex; // store column index
+            const values = [...new Set(tbodyRows
+                .filter(r => !r.classList.contains('placeholder'))
+                .map(r => r.cells[colIndex].textContent.trim())
+                .filter(v => v !== ''))].sort();
+
+            select.innerHTML = '<option value="">All</option>';
+            values.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                select.appendChild(opt);
+            });
+            select.onchange = filterTableByDropdowns;
+            filterTh.appendChild(select);
+        }
+        filterRow.appendChild(filterTh);
+    });
+}
+
+// Call this at the end of populateColumnFilters()
+const selects = document.querySelectorAll('select.col-filter');
+selects.forEach(sel => {
+    sel.addEventListener('change', () => {
+        filterTableByDropdowns();
+        updateUrlParams();
+    });
+});
+
+function filterTableByDropdowns() {
+    const table = document.getElementById('job-table');
+    const tbodyRows = Array.from(table.tBodies[0].rows);
+    const selects = Array.from(document.querySelectorAll('select.col-filter'));
+
+    tbodyRows.forEach(row => {
+        if (row.classList.contains('placeholder')) return;
+        let show = true;
+        selects.forEach(sel => {
+            const colIndex = parseInt(sel.dataset.colIndex, 10);
+            const val = sel.value;
+            if (val && row.cells[colIndex].textContent.trim() !== val) show = false;
+        });
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+// Update the URL query parameters based on current selections
+function updateUrlParams() {
+    const params = new URLSearchParams();
+    
+    // Add site if selected
+    const siteSelect = document.getElementById('site');
+    if (siteSelect.value) {
+        const siteText = siteSelect.selectedOptions[0].text;
+        params.set('site', siteText);
+    }
+
+    // Add any active filter dropdowns
+    const filterRow = document.getElementById('filter-row');
+    if (filterRow) {
+        const selects = filterRow.querySelectorAll('select.col-filter');
+        selects.forEach((sel, i) => {
+            if (sel.value) {
+                // Use header name as key or some unique identifier
+                const header = document.querySelectorAll('#job-table thead tr')[0].cells[i];
+                const key = header.textContent.trim().replace(/\s+/g, '').toLowerCase(); 
+                params.set(key, sel.value);
+            }
+        });
+    }
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    history.replaceState(null, '', newUrl);
+}
+
+// Attach listeners to site dropdown
+document.getElementById('site').addEventListener('change', () => {
+    updateUrlParams();
+});
+
+// Attach listeners to filter dropdowns dynamically after filters populate
+function attachFilterDropdownListeners() {
+    const selects = document.querySelectorAll('select.col-filter');
+    selects.forEach(sel => {
+        sel.addEventListener('change', updateUrlParams);
+    });
+}
+
+// Call this at the end of populateColumnFilters()
+populateColumnFilters(); // already exists
+attachFilterDropdownListeners(); // attach listeners
+
+
+// Event listeners
+document.getElementById('site').addEventListener('change', (e) => { loadJobsForSite(e.target.value); });
+
+function openModal(type) { document.getElementById(`${type}-modal`).style.display = 'flex'; }
+function closeModal(type) { document.getElementById(`${type}-modal`).style.display = 'none'; }
+function submitAddJob() { alert('Add job'); closeModal('add'); }
+function submitCompleteJob() { alert('Job marked as complete'); closeModal('complete'); }
+function handleFileImport(event) { const file = event.target.files[0]; if (file) { alert("Selected file: " + file.name); } }
+
+loadSites();
+
+document.getElementById('site').addEventListener('change', () => {
+    updateUrlParams();
+});
+
+// Sidebar active link
+const currentPage = window.location.pathname.split("/").pop();
+document.querySelectorAll('.sidebar a').forEach(link => {
+    if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    else link.classList.remove('active');
+});
+
+// Sorting
+function makeTableSortable(tableId) {
+    const table = document.getElementById(tableId);
+    const headers = table.querySelectorAll("th.sortable");
+    let sortColumnIndex = null;
+    let sortAsc = true;
+
+    headers.forEach((header, index) => {
+        header.addEventListener("click", () => {
+            const rowsArray = Array.from(table.tBodies[0].rows);
+            const isNumeric = rowsArray.every(row => !isNaN(parseFloat(row.cells[index].textContent)));
+            rowsArray.sort((a, b) => {
+                let aText = a.cells[index].textContent.trim();
+                let bText = b.cells[index].textContent.trim();
+                if (isNumeric) return sortAsc ? aText - bText : bText - aText;
+                else return sortAsc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+            });
+            rowsArray.forEach(row => table.tBodies[0].appendChild(row));
+            headers.forEach(h => h.classList.remove('sorted-asc','sorted-desc'));
+            header.classList.add(sortAsc ? 'sorted-asc' : 'sorted-desc');
+            sortAsc = sortColumnIndex === index ? !sortAsc : true;
+            sortColumnIndex = index;
+        });
+    });
+}
+makeTableSortable('job-table');
+
+// Editable cells
+function makeTableEditable(tableId) {
+    const table = document.getElementById(tableId);
+    table.addEventListener('click', function(e) {
+        const td = e.target.closest('td.editable');
+        if (!td) return;
+        if (td.querySelector('input') || td.querySelector('textarea')) return;
+
+        const originalText = td.textContent;
+        const input = td.textContent.length > 50 ? document.createElement('textarea') : document.createElement('input');
+        input.value = originalText;
+        td.textContent = '';
+        td.appendChild(input);
+        input.focus();
+
+        input.addEventListener('blur', () => { td.textContent = input.value; });
+        input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && input.tagName === 'INPUT') { input.blur(); } });
+    });
+}
+makeTableEditable('job-table');
+
+// Apply URL filters after sites are loaded
+async function applyUrlFilters() {
+    const params = new URLSearchParams(window.location.search);
+    const siteName = params.get('site');
+    const eagiDesc = params.get('eagidesc');
+
+    if (!siteName) return;
+
+    const siteSelect = document.getElementById('site');
+
+    // Wait until sites are loaded into dropdown
+    const checkSitesLoaded = () => new Promise(resolve => {
+        const interval = setInterval(() => {
+            if (siteSelect.options.length > 1) { // first option is "Select a site..."
+                clearInterval(interval);
+                resolve();
+            }
+        }, 50);
+    });
+
+    await checkSitesLoaded();
+
+    // Select the site by name
+    const siteOption = Array.from(siteSelect.options).find(opt => opt.text === siteName);
+    if (siteOption) {
+        siteSelect.value = siteOption.value;
+
+        // Trigger site selection to load jobs
+        await loadJobsForSite(siteOption.value);
+
+        // Apply E Agi Description filter if present
+        if (eagiDesc) {
+            const tableRows = Array.from(document.querySelectorAll('#job-table tbody tr'));
+            tableRows.forEach(row => {
+                if (row.classList.contains('placeholder')) return;
+                const cellValue = row.cells[5].textContent.trim(); // E Agi Description is column 5 (0-indexed)
+                row.style.display = cellValue === eagiDesc ? '' : 'none';
+            });
+
+            // Also set the filter dropdown in table if it exists
+            const filterRow = document.getElementById('filter-row');
+            if (filterRow) {
+                const eagiSelect = filterRow.cells[5].querySelector('select');
+                if (eagiSelect) eagiSelect.value = eagiDesc;
+            }
+        }
+    }
+}
+
+// Call after sites load
+loadSites().then(applyUrlFilters);
+
+// Reset URL whenever user selects a new site or changes a filter
+function resetUrl() {
+    history.replaceState(null, '', '/jobs');
+}
+
+// Site dropdown listener
+document.getElementById('site').addEventListener('change', async (e) => {
+    const siteId = e.target.value;
+    await loadJobsForSite(siteId);
+    resetUrl();  // reset URL
+});
+
+// Filter dropdowns listener
+function attachFilterResetListeners() {
+    const selects = document.querySelectorAll('select.col-filter');
+    selects.forEach(sel => {
+        sel.addEventListener('change', () => {
+            filterTableByDropdowns();
+            resetUrl();  // reset URL
+        });
+    });
+}
+
+// Make sure we call this after filters are created
+populateColumnFilters = (function(orig) {
+    return function() {
+        orig(); // original populateColumnFilters
+        attachFilterResetListeners();
+    }
+})(populateColumnFilters);
+
+
+</script>
+</body>
+</html>
