@@ -13,8 +13,10 @@ app.secret_key = "dev-secret-key"  # Required for sessions
 # -----------------------
 # Supabase config
 # -----------------------
-SUPABASE_URL = "https://ynsxrxfymvlpvvtceuxm.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inluc3hyeGZ5bXZscHZ2dGNldXhtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Njk5NjI0MiwiZXhwIjoyMDgyNTcyMjQyfQ.Tf6VAgXmnokEA_rL8Bh3EQi_MlLF4RrYCyMI-B18B9o"
+import os
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # -----------------------
