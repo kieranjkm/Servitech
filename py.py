@@ -14,6 +14,7 @@ app.secret_key = "dev-secret-key"  # Required for sessions
 # Supabase config
 # -----------------------
 import os
+from supabase import create_client, Client
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
