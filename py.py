@@ -41,11 +41,11 @@ def login():
         password = request.form.get('password')
 
         result = supabase.table("tblusers")\
-            .select("*")\
-            .eq("username", username)\
-            .eq("password", password)\
-            .eq("isactive", True)\
-            .execute()
+    .select("*")\
+    .eq("username", username)\
+    .eq("password", password)\
+    .eq("isactive", "true")\
+    .execute()
 
         user = result.data[0] if result.data else None
 
